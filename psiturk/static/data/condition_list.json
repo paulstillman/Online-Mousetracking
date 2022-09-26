@@ -1,0 +1,20 @@
+{
+  "stimulus": [
+    {
+      "trial_id": "a",
+      "trial_type": "image_image_image_text",
+      "trial_display_left": "Bart.png",
+      "trial_display_center": "Bart.png",
+      "trial_display_right": "Bart.png",
+      "trial_display_bottom": "Question for trial 1"
+    },
+    {
+      "trial_id": "b",
+      "trial_type": "image_text_image_image",
+      "trial_display_left": "Bart.png",
+      "trial_display_center": "Question for trial 2",
+      "trial_display_right": "Bart.png",
+      "trial_display_bottom": "Bart.png"
+    }
+  ]
+}
