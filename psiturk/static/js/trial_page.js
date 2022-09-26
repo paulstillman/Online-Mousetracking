@@ -28,30 +28,11 @@ class TrialPage extends Page {
         this.current_trial_num = 0;
 
         this.mouse_pos_list = [];
-        this.is_mouse_at_start_pos = false;
         this.is_mouse_recording = false;
 
         [this.bottom_text_div, this.bottom_img].forEach(function(element) {
-            element.addEventListener("mouseenter", function() {
-                this.is_mouse_at_start_pos = true;
-            }.bind(this));
-        }.bind(this));
-
-        [this.bottom_text_div, this.bottom_img].forEach(function(element) {
-            element.addEventListener("mouseover", function() {
-                this.is_mouse_at_start_pos = true;
-            }.bind(this));
-        }.bind(this));
-
-        [this.bottom_text_div, this.bottom_img].forEach(function(element) {
-            element.addEventListener("mouseout", function() {
-                this.is_mouse_at_start_pos = false;
-            }.bind(this));
-        }.bind(this));
-
-        [this.bottom_text_div, this.bottom_img].forEach(function(element) {
             element.addEventListener("click", function() {
-                TrialPage.hideElement(this.bottom_text_div, this.bottom_img);
+                this.#mainTrialView();
                 this.is_mouse_recording = true;
             }.bind(this));
         }.bind(this));
@@ -67,7 +48,6 @@ class TrialPage extends Page {
     }
 
     initPage() {
-        this.is_mouse_at_start_pos = false;
         this.mouse_pos_list = [];
     }
 
@@ -110,13 +90,13 @@ class TrialPage extends Page {
 
     getMouseXPosList() {
         let return_list = [];
-        this.mouse_pos_list.forEach((mouse_pos, i) => return_list.push(mouse_pos.getXPos()));
+        this.mouse_pos_list.forEach(mouse_pos => return_list.push(mouse_pos.getXPos()));
         return return_list.map(String);
     }
 
     getMouseYPosList() {
         let return_list = [];
-        this.mouse_pos_list.forEach((mouse_pos, i) => return_list.push(mouse_pos.getYPos()));
+        this.mouse_pos_list.forEach(mouse_pos => return_list.push(mouse_pos.getYPos()));
         return return_list.map(String);
     }
 
@@ -163,6 +143,8 @@ class TrialPage extends Page {
                 this.bottom_text.innerHTML = part_details.getPartText();
             }
         }
+
+        this.#initTrialView();
     }
 
     #updateView() {
@@ -171,10 +153,26 @@ class TrialPage extends Page {
         this.#updatePart(this.trial_data.get_trial_right_details());
         this.#updatePart(this.trial_data.get_trial_bottom_details());
         this.progress.innerHTML = (this.trial_data.get_trial_number() + 1) + " / " +
-                                  this.trial_data.get_total_trials();
+                                   this.trial_data.get_total_trials();
     }
 
     #initTrialView() {
-        
+        if (this.trial_data.get_trial_bottom_details().getPartType() === PartType.IMAGE)
+            TrialPage.showElement(this.bottom_img);
+        else
+            TrialPage.showElement(this.bottom_text_div);
+
+        TrialPage.hideElement(this.center_text_div);
+        TrialPage.hideElement(this.center_img);
+    }
+
+    #mainTrialView() {
+        if (this.trial_data.get_trial_center_details().getPartType() === PartType.IMAGE)
+            TrialPage.showElement(this.center_img);
+        else
+            TrialPage.showElement(this.center_text_div);
+
+        TrialPage.hideElement(this.bottom_text_div);
+        TrialPage.hideElement(this.bottom_img);
     }
 }
