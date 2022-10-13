@@ -12,7 +12,7 @@ def parse_db(db_path=DATA_BASE_PATH):
     metadata = MetaData()
     metadata.bind = create_engine("sqlite:///" + db_path)
 
-    table = Table("blocks_social", metadata, autoload=True)
+    table = Table("mouse_tracking_data", metadata, autoload=True)
     s = table.select()
     rows = s.execute()
 
