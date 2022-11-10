@@ -30,10 +30,37 @@ class TrialPage extends Page {
         this.mouse_pos_list = [];
         this.is_mouse_recording = false;
 
-        [this.bottom_text_div, this.bottom_img].forEach(function(element) {
+        this.mouse_at_start_time = 0;
+        this.interval_mouse_at_start = null;
+
+        [this.bottom_text_div, this.bottom_text, this.bottom_img].forEach(function(element) {
             element.addEventListener("click", function() {
                 this.#mainTrialView();
                 this.is_mouse_recording = true;
+
+                this.mouse_at_start_time = 0;
+                if (this.interval_mouse_at_start != null) {
+                    clearInterval(this.interval_mouse_at_start);
+                    this.interval_mouse_at_start = null;
+                }
+            }.bind(this));
+        }.bind(this));
+
+        [this.bottom_text_div, this.bottom_text, this.bottom_img].forEach(function(element) {
+            element.addEventListener("mouseenter", function() {
+                if (this.interval_mouse_at_start == null) {
+                    this.mouse_at_start_time = new Date().getTime();
+                    this.interval_mouse_at_start = setInterval(function() {
+                        if(new Date().getTime() - this.mouse_at_start_time > 5000) {
+                            new Toast().warn('Warning',
+                                        'Please make a move faster...',
+                                        {position: "tm", duration: 1500, closeBtn: false});
+                            clearInterval(this.interval_mouse_at_start);
+                            this.interval_mouse_at_start = null;
+                        }
+                    }.bind(this), 100);
+                }
+
             }.bind(this));
         }.bind(this));
 

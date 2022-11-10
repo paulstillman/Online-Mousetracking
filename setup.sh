@@ -35,12 +35,12 @@ fi
 # download stimulus set
 if [[ "$@" =~ "data" ]] || [[ "$@" =~ "all" ]];then
     echo "Pulling data..."
-    wget "https://yale.box.com/shared/static/2amlu1zguc6rtwdonfp9119imxyw1jxe.zip" -O "stimuli.zip"
-    chmod +777 stimuli.zip
-    unzip stimuli.zip
-    mv stimuli/* psiturk/static/images/
-    rm -rf stimuli
-    rm -rf stimuli.zip
+    wget "https://yale.box.com/shared/static/2amlu1zguc6rtwdonfp9119imxyw1jxe.zip" -O "images.zip"
+    chmod +777 images.zip
+    unzip images.zip
+    mv images/* psiturk/static/images/
+    rm -rf images
+    rm -rf images.zip
 else
     echo "Not pulling any data"
 fi
