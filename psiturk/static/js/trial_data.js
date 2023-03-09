@@ -110,9 +110,13 @@ class StimulusData {
     }
 }
 
+
 class TrialData {
 
-    constructor(trial_data) {
+    constructor(trial_data, block_num, is_practice) {
+        this.block_num = block_num;
+        this.is_practice = is_practice;
+
         this.stimulus_list = [];
         this.image_list = [];
 
@@ -135,7 +139,10 @@ class TrialData {
 
         let base_path = "../static/images/";
 
-        let stimuli_data = trial_data["stimulus"];
+        let stimuli_data = trial_data["stimulus" + this.block_num];
+        if (this.is_practice) {
+            stimuli_data = trial_data["practice"];
+        }
 
         for (let trial_num = 0; trial_num < stimuli_data.length; trial_num++) {
             let stimulus_data = stimuli_data[trial_num];

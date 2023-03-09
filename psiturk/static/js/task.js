@@ -3,6 +3,8 @@ let PROLIFIC_ID = "";
 // let EXPERIMENT_PART = 0;
 let START_INSTRUCTION = 0;
 
+let TOTAL_BLOCKS = 2;
+
 let SKIP_PROLIFIC = true;
 let SKIP_INSTRUCTIONS = true;
 
@@ -47,7 +49,7 @@ let ProlificID = function (condition_list) {
             psiTurk.recordTrialData({
                 'prolific_id': PROLIFIC_ID,
             });
-            console.log("PROLIFIC_ID: ", PROLIFIC_ID);
+
             InstructionRunner(condition_list);
             return;
         }
@@ -83,7 +85,7 @@ let InstructionRunner = function (condition_list) {
 
     let end_instructions = function () {
         psiTurk.finishInstructions();
-        Experiment(condition_list);
+        Experiment(condition_list, 0, true);
     };
 
     // start the loop
@@ -110,11 +112,15 @@ let GenericPageRunner = function (title, message, color_scheme,
 /**************
  * Experiment *
  **************/
-let Experiment = function (condition_list) {
+let Experiment = function (condition_list, block_num, is_practice) {
     let start_time = -1;
 
-    let trial_data = new TrialData(condition_list);
-    let stimulus_data = condition_list["stimulus"];
+    let trial_data = new TrialData(condition_list, block_num, is_practice);
+
+    let stimulus_data = condition_list["stimulus" + block_num];
+    if (is_practice) {
+        stimulus_data = condition_list["practice"];
+    }
 
     let trial_page = new TrialPage(trial_data);
 
@@ -129,12 +135,14 @@ let Experiment = function (condition_list) {
 
         start_time = new Date().getTime();
 
-        trial_page.showPage(function () {
-                register_response(curr_trial_page_index);
-                trial_page.clearResponse();
-                run_single_trial(curr_trial_page_index + 1);
-            }
-        );
+        let update_trial_state = function () {
+            if (!trial_page.getIsMouseRecording()) return;
+            register_response(curr_trial_page_index);
+            trial_page.clearResponse(update_trial_state);
+            run_single_trial(curr_trial_page_index + 1);
+        }
+
+        trial_page.showPage(update_trial_state);
     };
 
     let register_response = function () {
@@ -157,6 +165,33 @@ let Experiment = function (condition_list) {
 
     let end_experiment = function () {
         psiTurk.saveData();
+
+        if (is_practice) {
+            GenericPageRunner(
+                "You did great!",
+                "Hope you are warmed up now!<br>" +
+                "Press <b>CONTINUE</b> to start the experiment!",
+                Page.StatusSuccess,
+                function () {
+                    Experiment(condition_list, 0, false);
+                }
+            );
+            return;
+        }
+
+        if (block_num < TOTAL_BLOCKS - 1) {
+            GenericPageRunner(
+                "You did great!",
+                "The next few trials will be similar except that the question asked will be different.<br>" +
+                "Press <b>CONTINUE</b> to start the experiment!",
+                Page.StatusSuccess,
+                function () {
+                    Experiment(condition_list, block_num + 1, false);
+                }
+            );
+            return;
+        }
+
         GenericPageRunner(
             "That's all! Thank you for participating :)",
             "<br>" +
@@ -221,6 +256,6 @@ $(window).load(function () {
         return;
     }
 
-    // generateNewConditionList();
-    loadConditionList();
+    generateNewConditionList();
+    // loadConditionList();
 });

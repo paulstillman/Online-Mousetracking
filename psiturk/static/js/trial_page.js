@@ -65,9 +65,8 @@ class TrialPage extends Page {
         }.bind(this));
 
         onmousemove = function(e){
-            if (this.is_mouse_recording) {
+            if (this.getIsMouseRecording()) {
                 this.mouse_pos_list.push(new MousePosition(e.clientX, e.clientY))
-                console.log("mouse location:", e.clientX, e.clientY);
             }
         }.bind(this);
 
@@ -84,12 +83,10 @@ class TrialPage extends Page {
     }
 
     showPage(callback) {
-        [this.top_left_img, this.top_right_img, this.top_left_text_div, this.top_right_text_div].forEach(function(e) {
-            e.addEventListener("click", function() {
-                this.is_mouse_recording = false;
-                callback();
-            }.bind(this));
-        }.bind(this));
+        this.top_left_img.addEventListener("click", callback);
+        this.top_right_img.addEventListener("click", callback);
+        this.top_left_text_div.addEventListener("click", callback);
+        this.top_right_text_div.addEventListener("click", callback);
 
         if (this.current_trial_num >= this.trial_data.get_total_trials()) {
             return;
@@ -103,8 +100,19 @@ class TrialPage extends Page {
         this.#updateView();
     }
 
-    clearResponse() {
+    clearResponse(callback) {
+        this.is_mouse_recording = false;
+
+        this.top_left_img.removeEventListener("click", callback);
+        this.top_right_img.removeEventListener("click", callback);
+        this.top_left_text_div.removeEventListener("click", callback);
+        this.top_right_text_div.removeEventListener("click", callback);
+
         this.initPage();
+    }
+
+    getIsMouseRecording() {
+        return this.is_mouse_recording;
     }
 
     getTrialNumber() {
