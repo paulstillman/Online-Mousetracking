@@ -30,42 +30,29 @@ class TrialPage extends Page {
         this.mouse_pos_list = [];
         this.is_mouse_recording = false;
 
-        this.mouse_at_start_time = 0;
-        this.interval_mouse_at_start = null;
+        this.mouse_not_moving_timeout = null;
 
         [this.bottom_text_div, this.bottom_text, this.bottom_img].forEach(function(element) {
             element.addEventListener("click", function() {
                 this.#mainTrialView();
                 this.is_mouse_recording = true;
 
-                this.mouse_at_start_time = 0;
-                if (this.interval_mouse_at_start != null) {
-                    clearInterval(this.interval_mouse_at_start);
-                    this.interval_mouse_at_start = null;
-                }
-            }.bind(this));
-        }.bind(this));
-
-        [this.bottom_text_div, this.bottom_text, this.bottom_img].forEach(function(element) {
-            element.addEventListener("mouseenter", function() {
-                if (this.interval_mouse_at_start == null) {
-                    this.mouse_at_start_time = new Date().getTime();
-                    this.interval_mouse_at_start = setInterval(function() {
-                        if(new Date().getTime() - this.mouse_at_start_time > 5000) {
-                            new Toast().warn('Warning',
-                                        'Please make a move faster...',
-                                        {position: "tm", duration: 1500, closeBtn: false});
-                            clearInterval(this.interval_mouse_at_start);
-                            this.interval_mouse_at_start = null;
-                        }
-                    }.bind(this), 100);
-                }
-
+                this.mouse_not_moving_timeout = setTimeout(function(){
+                                                new Toast().warn('Warning',
+                                                            'Please make a move faster...',
+                                                            {position: "tm", duration: 1500, closeBtn: false});
+                                                }, 2000);
             }.bind(this));
         }.bind(this));
 
         onmousemove = function(e){
             if (this.getIsMouseRecording()) {
+                clearTimeout(this.mouse_not_moving_timeout);
+                this.mouse_not_moving_timeout = setTimeout(function(){
+                                                new Toast().warn('Warning',
+                                                            'Please make a move faster...',
+                                                            {position: "tm", duration: 1500, closeBtn: false});
+                                                }, 2000);
                 this.mouse_pos_list.push(new MousePosition(e.clientX, e.clientY))
             }
         }.bind(this);
@@ -102,6 +89,7 @@ class TrialPage extends Page {
 
     clearResponse(callback) {
         this.is_mouse_recording = false;
+        clearTimeout(this.mouse_not_moving_timeout);
 
         this.top_left_img.removeEventListener("click", callback);
         this.top_right_img.removeEventListener("click", callback);
