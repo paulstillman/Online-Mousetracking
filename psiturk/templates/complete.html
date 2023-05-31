@@ -18,6 +18,7 @@
                 <h1>Task complete!</h1>
                 <p><br></p>
                 <div class="alert alert-warning">
+                    <a id="out_url">Click here to register your completion with Prolific</a>
                     <script>
                         console.log("exiting full screen");
                         if (document.exitFullscreen) {
@@ -27,8 +28,14 @@
                         } else if (document.msExitFullscreen) { /* IE11 */
                             document.msExitFullscreen();
                         }
+
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const uniqueIdNum = urlParams.get('uniqueId').split(':')[0];
+
+                        const outURLString = "https://yalesurvey.ca1.qualtrics.com/jfe/form/SV_7PyNE6hJUvcm2iO/?idnum=" + uniqueIdNum;
+
+                        document.getElementById("out_url").setAttribute("href", outURLString);
                     </script>
-                    <a href="https://app.prolific.co/submissions/complete?cc=399C049D">Click here to register your completion with Prolific</a>
                 </div>
 			</div>
 		</div>

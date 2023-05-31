@@ -1,57 +1,25 @@
 let init_instructions = [
     [
-        "Thank you for volunteering to help out with our study.<br>" +
-        "<ul>" +
-        "<li>Please take a moment to adjust your seating so that you can comfortably watch the monitor and use the keyboard/mouse." +
-        "<li>Close the door or do whatever is necessary to minimize disturbance during the experiment." +
-        "<li>Please also take a moment to silence your phone so that you are not interrupted by any messages mid-experiment." +
-        "</ul><br>" +
-        "Click <b>Next</b> when you are ready to continue.",
-        "left", "", false, 8
-    ],
-    [
         "This experiment requires you to be in <b>full screen</b> mode.<br><br>" +
         "We will switch you to full screen mode when you press <b>Next</b> below.<br><br>" +
         "Don't worry, we will return back to the normal size at the end of the experiment.<br><br>" + "" +
         "Please Note: If you do need to leave in the middle, you can press the ESC key -- but please avoid this. Your responses are only useful to us if you stay in this mode until the end of the experiment.<br><br>"+
         "Click <b>Next</b> to continue.",
-        "left"
-    ],
-    [
-        "The study is designed to be <i>challenging</i>.<br> " +
-        "Sometimes, you'll be certain about what you saw. Other times, you won't be -- that is okay! We only hope that you give your best shot at all the questions in the experiment.",
         "center"
     ],
     [
-        "We know it is difficult to stay focused on the screen for too long, but we urge you to do your best.<br><br>" +
-        "Thank you again for your participation in this study and for your help with our research!<br>",
+        "In this part of the study, you will be asked to categorize a series of characters. Whether or not you recognize any or all of the characters does not matter, your goal is to categorize them as quickly as possible.<br><br>" +
+        "To begin a trial, you will click on the blue <b>START</b> button at the bottom of the screen. After you press the button, a character will appear in the center of your screen. As soon as you see the character, start moving your mouse to the top of the screen towards the button that you think best fits the character.<br><br>" +
+        "<b>Please start moving your mouse as soon as the character appears, and keep your mouse on the screen throughout the entire trial</b> (you will receive a warning message if you take too long to start moving or if you leave the screen).<br><br>" +
+        "There are no right or wrong answers -- use your \"gut instinct\" when making your judgments.<br><br>" +
+        "Please click the button below to begin!",
         "center"
     ],
     [
-        "In this experiment, you will be presented with images containing <b>FIVE</b> blocks arranaged in different configurations. " +
-        "In some of these images, you'll also see my hands manipulating the arrangement of the blocks.<br><br>" +
-        "For instance, below is an example of me reorganizing the blocks to attain the goal arrangement <br> illustrated in the <b>final configuration</b> image. <br>",
-        "center"
-    ],
-    [
-        "Overall, your task will be to predict the intention behind my actions. <br><br>" +
-        "There are <b>TWO</b> types of questions that you will be asked: <br><br>" +
-        "<ol>" +
-        "<li><b>What was the goal? </b>: <br>" +
-        "Here, you'll be presented with THREE images -- an image demonstrating my intented action, and two images displaying two potential outcomes of my action on either sides of a slider.<br><br>" +
-        "<li><b>What was my next action? </b>: <br>"+
-        "Here, you'll be presented with FOUR images -- an image displaying some initial configuration that the blocks were in, an image displaying a final configuration that the blocks were moved to, and two images on either sides of a slider that illustrate two potential actions I could perform to go from the initial to the final configuration. " +
-        "</ol><br>" +
-        "<i>Please use the slider to report your judgement in the experiment.</i>",
-        "left"
-    ],
-    [
-        "To ensure that you have understood the instructions well, we will ask you two questions relating to what you read. <br><br>" +
-        "Click <b>Next</b> to proceed to a short quiz.",
+        "<br><br><br><br><br>We are about to start.<br>Are you ready?<br><br><br><br><br><br><br>",
         "center"
     ],
 ];
-
 
 class InstructionPage extends Page {
     constructor() {
@@ -63,9 +31,13 @@ class InstructionPage extends Page {
         this.next_button = document.getElementById("next_instruction");
 
         this.instructions_img_div = document.getElementById("instructions_img_div");
-        this.instructions_img = document.getElementById("instructions_img");
+
+        this.instructions_checkbox_div = document.getElementById("instructions_checkbox_div");
+        this.instructions_checkbox = document.getElementById("checkbox_id");
 
         this.instruction_number = 0;
+
+        this.is_checkbox_checked = true;
     }
 
     set_instruction_number(instruction_number) {
@@ -78,9 +50,11 @@ class InstructionPage extends Page {
 
     showNextInstruction(callback) {
         this.next_button.onclick = function() {
-            console.log("INFO: next button clicked.");
-            callback();
-        };
+            if (this.is_checkbox_checked) {
+                callback();
+            }
+            console.log(this.is_checkbox_checked);
+        }.bind(this);
 
         if (this.instruction_number >= this.get_total_instructions()) {
             console.log("No more instructions to process.");
@@ -93,20 +67,33 @@ class InstructionPage extends Page {
             Utils.goFullscreen(this.full_screen_element);
         }
 
-        this.instructions_img_div.style.display = "none";
+        if (this.instruction_number === 1) {
+            this.is_checkbox_checked = false;
 
-        let base_path = "../static/images/";
-        if (this.instruction_number === 4) {
-            this.instructions_img.src = base_path + "instructions_action_no_arrow.png";
-            this.instructions_img.onload = function () {
-                this.showInstructions();
-            }.bind(this);
+            this.next_button.style.display = "none";
+            this.instructions_checkbox_div.style.display = "block";
 
-            this.instructions_img_div.style.display = "block";
+            this.instructions_checkbox.addEventListener('change', (event) => {
+                if (event.currentTarget.checked) {
+                    this.is_checkbox_checked = true;
+                    this.next_button.style.display = "block";
+                } else {
+                    this.is_checkbox_checked = false;
+                    this.next_button.style.display = "none";
+                }
+            });
+        } else {
+            this.instructions_checkbox_div.style.display = "none";
         }
 
-        this.instructions.innerHTML = instruction_array[this.instruction_number][0];
-        this.instructions.style.textAlign = instruction_array[this.instruction_number][1];
+        if (this.instructions_img_div) {
+            this.instructions_img_div.style.display = "none";
+        }
+
+        if (this.instructions) {
+            this.instructions.innerHTML = instruction_array[this.instruction_number][0];
+            this.instructions.style.textAlign = instruction_array[this.instruction_number][1];
+        }
     }
 
 }

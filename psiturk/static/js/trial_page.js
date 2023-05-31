@@ -1,5 +1,13 @@
 class TrialPage extends Page {
 
+    static is_mouse_recording = false;
+
+    static warning_movement_toast = new Toast();
+    static warning_bounds_toast = new Toast();
+
+    static warning_movement_timeout = null
+    static warning_bounds_timeout = null
+
     constructor(trial_data) {
         super();
         this.hideAll();
@@ -28,40 +36,78 @@ class TrialPage extends Page {
         this.current_trial_num = 0;
 
         this.mouse_pos_list = [];
-        this.is_mouse_recording = false;
 
-        this.mouse_not_moving_timeout = null;
+        this.warning_movement_counter = 0;
 
-        [this.bottom_text_div, this.bottom_text, this.bottom_img].forEach(function(element) {
-            element.addEventListener("click", function() {
-                this.#mainTrialView();
-                this.is_mouse_recording = true;
+        this.warning_bounds_counter = 0;
 
-                this.mouse_not_moving_timeout = setTimeout(function(){
-                                                new Toast().warn('Warning',
-                                                            'Please make a move faster...',
-                                                            {position: "tm", duration: 1500, closeBtn: false});
-                                                }, 2000);
-            }.bind(this));
-        }.bind(this));
-
-        onmousemove = function(e){
+        onmousemove = function(e) {
+            this.clearWarnings();
             if (this.getIsMouseRecording()) {
-                clearTimeout(this.mouse_not_moving_timeout);
-                this.mouse_not_moving_timeout = setTimeout(function(){
-                                                new Toast().warn('Warning',
-                                                            'Please make a move faster...',
-                                                            {position: "tm", duration: 1500, closeBtn: false});
-                                                }, 2000);
+                clearTimeout(TrialPage.warning_movement_timeout);
+                TrialPage.warning_movement_timeout = setTimeout(function(){
+                                                   if (!this.getIsMouseRecording()) return;
+                                                   TrialPage.warning_movement_toast.warn('Warning',
+                                                       'Please make a move faster...',
+                                                       {position: "tm", duration: 20000, closeBtn: false});
+                                                   this.warning_movement_counter = 1;
+                                                   }.bind(this), 2000);
+
                 this.mouse_pos_list.push(new MousePosition(e.clientX, e.clientY))
             }
         }.bind(this);
 
-        this.initPage();
+        $(document).mouseleave(function () {
+            this.clearWarnings();
+            if (this.getIsMouseRecording()) {
+                clearTimeout(TrialPage.warning_bounds_timeout);
+                TrialPage.warning_bounds_timeout = setTimeout(function(){
+                                                 if (!this.getIsMouseRecording()) return;
+                                                 TrialPage.warning_bounds_toast.error('Warning',
+                                                     'Please keep your cursor within the screen bounds...',
+                                                     {position: "tm", duration: 20000, closeBtn: false});
+                                                 this.warning_bounds_counter = 1;
+                                                 }.bind(this), 200);
+            }
+        }.bind(this));
+    }
+
+    bottomClickListener() {
+        this.#mainTrialView();
+
+        TrialPage.is_mouse_recording = true;
+
+        clearTimeout(TrialPage.warning_movement_timeout);
+        TrialPage.warning_movement_timeout = setTimeout(function(){
+                                           if (!this.getIsMouseRecording()) return;
+                                           TrialPage.warning_movement_toast.warn('Warning',
+                                               'Please make a move faster...',
+                                               {position: "tm", duration: 20000, closeBtn: false});
+                                           this.warning_movement_counter = 1;
+
+                                           }.bind(this), 2000);
+
+        this.bottom_text_div.removeEventListener('click', this.bottomClickListener.bind(this));
+        this.bottom_text.removeEventListener('click', this.bottomClickListener.bind(this));
+        this.bottom_img.removeEventListener('click', this.bottomClickListener.bind(this));
+    }
+
+    getIsMouseRecording() {
+        return TrialPage.is_mouse_recording;
+    }
+
+    stopMouseRecording() {
+        TrialPage.is_mouse_recording = false;
     }
 
     initPage() {
+        this.stopMouseRecording();
         this.mouse_pos_list = [];
+
+        this.warning_movement_counter = 0;
+        this.warning_bounds_counter = 0;
+
+        this.clearWarnings();
     }
 
     setCurrentTrialNum(current_trial_num) {
@@ -70,6 +116,12 @@ class TrialPage extends Page {
     }
 
     showPage(callback) {
+        this.initPage();
+
+        this.bottom_text_div.addEventListener('click', this.bottomClickListener.bind(this));
+        this.bottom_text.addEventListener('click', this.bottomClickListener.bind(this));
+        this.bottom_img.addEventListener('click', this.bottomClickListener.bind(this));
+
         this.top_left_img.addEventListener("click", callback);
         this.top_right_img.addEventListener("click", callback);
         this.top_left_text_div.addEventListener("click", callback);
@@ -83,24 +135,48 @@ class TrialPage extends Page {
             Utils.goFullscreen(this.full_screen_element);
         }
 
-        this.initPage();
+        this.showProgress();
         this.#updateView();
     }
 
+    hideProgress(){
+        TrialPage.hideElement(this.progress);
+    }
+
+    showProgress(){
+        TrialPage.showElement(this.progress);
+    }
+
+    hideAllView(){
+        TrialPage.hideElement(this.top_left_img);
+        TrialPage.hideElement(this.top_right_img);
+        TrialPage.hideElement(this.center_img);
+        TrialPage.hideElement(this.bottom_img);
+
+        TrialPage.hideElement(this.top_left_text_div);
+        TrialPage.hideElement(this.top_right_text_div);
+        TrialPage.hideElement(this.center_text_div);
+        TrialPage.hideElement(this.bottom_text_div);
+    }
+
+    clearWarnings() {
+        TrialPage.warning_movement_toast.clear();
+        TrialPage.warning_bounds_toast.clear();
+
+        clearTimeout(TrialPage.warning_movement_timeout);
+        clearTimeout(TrialPage.warning_bounds_timeout);
+
+        TrialPage.warning_movement_timeout = null;
+        TrialPage.warning_bounds_timeout = null;
+    }
+
     clearResponse(callback) {
-        this.is_mouse_recording = false;
-        clearTimeout(this.mouse_not_moving_timeout);
+        this.initPage();
 
         this.top_left_img.removeEventListener("click", callback);
         this.top_right_img.removeEventListener("click", callback);
         this.top_left_text_div.removeEventListener("click", callback);
         this.top_right_text_div.removeEventListener("click", callback);
-
-        this.initPage();
-    }
-
-    getIsMouseRecording() {
-        return this.is_mouse_recording;
     }
 
     getTrialNumber() {
@@ -109,6 +185,10 @@ class TrialPage extends Page {
 
     getTrialName() {
         return this.trial_data.get_trial_name();
+    }
+
+    getDisplayRightIsPositive() {
+       return this.trial_data.get_trial_display_right_is_positive();
     }
 
     getMouseXPosList() {
@@ -121,6 +201,26 @@ class TrialPage extends Page {
         let return_list = [];
         this.mouse_pos_list.forEach(mouse_pos => return_list.push(mouse_pos.getYPos()));
         return return_list.map(String);
+    }
+
+    getTrialLeftDetail() {
+        return this.trial_data.get_trial_left_details();
+    }
+
+    getTrialRightDetail() {
+        return this.trial_data.get_trial_right_details();
+    }
+
+    getTrialCenterDetail() {
+        return this.trial_data.get_trial_center_details();
+    }
+
+    getWarningMovementCount() {
+        return this.warning_movement_counter;
+    }
+
+    getWarningBoundsCount() {
+        return this.warning_bounds_counter;
     }
 
 

@@ -3,10 +3,10 @@ let PROLIFIC_ID = "";
 // let EXPERIMENT_PART = 0;
 let START_INSTRUCTION = 0;
 
-let TOTAL_BLOCKS = 2;
+let TOTAL_EXPERIMENT_BLOCKS = 4; // all the non-practice trial blocks
 
 let SKIP_PROLIFIC = true;
-let SKIP_INSTRUCTIONS = true;
+let SKIP_INSTRUCTIONS = false;
 
 let psiTurk = new PsiTurk(uniqueId, adServerLoc, mode);
 
@@ -44,7 +44,7 @@ let ProlificID = function (condition_list) {
             window.close();
             return;
         }
-        
+
         if (PROLIFIC_ID.length === 24) {
             psiTurk.recordTrialData({
                 'prolific_id': PROLIFIC_ID,
@@ -135,78 +135,130 @@ let Experiment = function (condition_list, block_num, is_practice) {
 
         start_time = new Date().getTime();
 
-        let update_trial_state = function () {
+        let update_trial_state = function (e) {
             if (!trial_page.getIsMouseRecording()) return;
-            register_response(curr_trial_page_index);
+
+            trial_page.clearWarnings();
+            trial_page.stopMouseRecording();
+
+            register_response(e.target.innerText);
             trial_page.clearResponse(update_trial_state);
             run_single_trial(curr_trial_page_index + 1);
+        }
+
+        trial_page.hideAllView();
+        if (curr_trial_page_index === 0){
+            trial_page.hideProgress();
         }
 
         trial_page.showPage(update_trial_state);
     };
 
-    let register_response = function () {
-        let reaction_time = new Date().getTime() - start_time;
+    let register_response = function (trial_user_response) {
+        let trial_timestamp = new Date().getTime();
+        let reaction_time = trial_timestamp - start_time;
 
         let trial_name = trial_page.getTrialName();
         let trial_number = trial_page.getTrialNumber();
+        let trial_left_detail = trial_page.getTrialLeftDetail().getPartText();
+        let trial_right_detail = trial_page.getTrialRightDetail().getPartText();
+        let trial_center_detail = trial_page.getTrialCenterDetail().getPartImageSrc();
+        let trial_display_right_is_positive = trial_page.getDisplayRightIsPositive();
         let trial_mouse_pos_x = trial_page.getMouseXPosList();
         let trial_mouse_pos_y = trial_page.getMouseYPosList();
+        let screen_resolution = Utils.getScreenResolution();
+        let browser_name = Utils.getBrowserName();
+        let warning_movement_count = trial_page.getWarningMovementCount();
+        let warning_bounds_count = trial_page.getWarningBoundsCount();
 
         psiTurk.recordTrialData({
             'Phase': "trial",
             'TrialName': trial_name,
             'TrialNumber': trial_number + 1,
-            'MousePosXList': trial_mouse_pos_x,
-            'MousePosYList': trial_mouse_pos_y,
-            'ReactionTime': reaction_time,
+            'TrialStartTime': start_time,
+            'TrialLeftDetail': trial_left_detail,
+            'TrialRightDetail': trial_right_detail,
+            'TrialCenterDetail': trial_center_detail,
+            'TrialDisplayRightIsPositive': trial_display_right_is_positive,
+            'TrialUserResponse': trial_user_response,
+            'TrialTimestamp': trial_timestamp,
+            'TrialReactionTime': reaction_time,
+            'TrialMousePosXList': trial_mouse_pos_x,
+            'TrialMousePosYList': trial_mouse_pos_y,
+            'TrialWarningMovementCount': warning_movement_count,
+            'TrialWarningBoundsCount': warning_bounds_count,
+            'ScreenResolution': screen_resolution,
+            'BrowserName': browser_name,
+        });
+    };
+
+    let prompt_resubmit = function () {
+        GenericPageRunner(
+            "ERROR! Connection issue.",
+            "Trying to resubmit...<br>" +
+            "Press <b>continue</b> to resubmit and go back to Qualtrics.",
+            Page.StatusError,
+            function () {
+                resubmit();
+            }
+        );
+    };
+
+    let resubmit = function () {
+        let re_prompt = setTimeout(prompt_resubmit, 10000);
+
+        psiTurk.saveData({
+            success: function () {
+                clearInterval(re_prompt);
+                psiTurk.computeBonus('compute_bonus', function () {
+                    window.open('', '_self', ''); window.close();
+                });
+            },
+            error: prompt_resubmit
         });
     };
 
     let end_experiment = function () {
         psiTurk.saveData();
 
-        if (is_practice) {
+        if (block_num + 1 >= TOTAL_EXPERIMENT_BLOCKS) {
             GenericPageRunner(
-                "You did great!",
-                "Hope you are warmed up now!<br>" +
-                "Press <b>CONTINUE</b> to start the experiment!",
+                "<b>Excellent job!</b><br>",
+                "That concludes this portion of the experiment. We have a few more questions, and then you are all done!<br>",
+                Page.StatusSuccess,
+                function () {
+                    Utils.leaveFullscreen();
+                    psiTurk.saveData({
+                        success: function() {
+                            psiTurk.completeHIT();
+                        },
+                        error: prompt_resubmit
+                    });
+                }
+            );
+            return;
+        }
+
+        if (is_practice) {
+            let title_string = "<b><i>Great Work!</b></i>";
+            let body_string = "<br>" +
+                "We will now begin the actual experiment. " +
+                "Much like in the practice trials, you will be asked to chategorize a character (shown in the center) into one of two traits (options shown at the top). " +
+                "These triats will change over the course of the expeirment so please remain attentive." +
+                "<b><i>There are no wrong answers in this task but please try and respond as fast as possible.</b></i><br>" +
+                "Press <b>CONTINUE</b> to start the experiment!";
+
+            GenericPageRunner(
+                title_string,
+                body_string,
                 Page.StatusSuccess,
                 function () {
                     Experiment(condition_list, 0, false);
                 }
             );
-            return;
+        } else {
+            Experiment(condition_list, block_num + 1, false);
         }
-
-        if (block_num < TOTAL_BLOCKS - 1) {
-            GenericPageRunner(
-                "You did great!",
-                "The next few trials will be similar except that the question asked will be different.<br>" +
-                "Press <b>CONTINUE</b> to start the experiment!",
-                Page.StatusSuccess,
-                function () {
-                    Experiment(condition_list, block_num + 1, false);
-                }
-            );
-            return;
-        }
-
-        GenericPageRunner(
-            "That's all! Thank you for participating :)",
-            "<br>" +
-            "Press <b>continue</b> to end.",
-            Page.StatusSuccess,
-            function () {
-                Utils.leaveFullscreen();
-                psiTurk.saveData({
-                    success: function() {
-                        psiTurk.completeHIT();
-                    },
-                    error: prompt_resubmit
-                });
-            }
-        );
     };
 
     setTimeout(function(){

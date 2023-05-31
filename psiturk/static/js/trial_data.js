@@ -61,7 +61,8 @@ class StimulusData {
                 trial_left, trial_display_left, trial_img_left_src,
                 trial_center, trial_display_center, trial_img_center_src,
                 trial_right, trial_display_right, trial_img_right_src,
-                trial_bottom, trial_display_bottom, trial_img_bottom_src) {
+                trial_bottom, trial_display_bottom, trial_img_bottom_src,
+                trial_display_right_is_positive) {
 
         this.trial_id = trial_id;
         this.trial_num = trial_num;
@@ -75,6 +76,8 @@ class StimulusData {
                                                 trial_right, trial_display_right, trial_img_right_src);
         this.trial_bottom_part = new PartDetails(PartLocation.BOTTOM,
                                                  trial_bottom, trial_display_bottom, trial_img_bottom_src);
+
+        this.trial_display_right_is_positive = trial_display_right_is_positive;
     }
 
     get_trial_id(){
@@ -91,6 +94,10 @@ class StimulusData {
 
     get_trial_name() {
         return this.get_trial_type() + "_" + this.get_trial_id();
+    }
+
+    get_trial_display_right_is_positive(){
+        return this.trial_display_right_is_positive;
     }
 
     get_trial_left_part_details() {
@@ -160,6 +167,8 @@ class TrialData {
             let trial_img_right = null;
             let trial_img_bottom = null;
 
+            let trial_display_right_is_positive = 0;
+
             trial_id = stimulus_data["trial_id"];
             trial_part_string = stimulus_data["trial_type"];
 
@@ -200,13 +209,16 @@ class TrialData {
                 trial_display_bottom = stimulus_data["trial_display_bottom"];
             }
 
+            trial_display_right_is_positive = stimulus_data["trial_display_right_is_positive"];
+
             this.stimulus_list.push(new StimulusData(trial_id,
                                                      trial_num,
                                                      trial_part_string,
                                                      trial_left_part_type, trial_display_left, trial_img_left,
                                                      trial_center_part_type, trial_display_center, trial_img_center,
                                                      trial_right_part_type, trial_display_right, trial_img_right,
-                                                     trial_bottom_part_type, trial_display_bottom, trial_img_bottom));
+                                                     trial_bottom_part_type, trial_display_bottom, trial_img_bottom,
+                                                     trial_display_right_is_positive));
         }
     }
 
@@ -224,6 +236,10 @@ class TrialData {
 
     get_trial_name() {
         return this.#get_current_stimulus_data().get_trial_name();
+    }
+
+    get_trial_display_right_is_positive() {
+        return this.#get_current_stimulus_data().get_trial_display_right_is_positive();
     }
 
     get_total_trials() {

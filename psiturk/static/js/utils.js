@@ -101,6 +101,33 @@ class Utils {
         })(navigator.userAgent || navigator.vendor || window.opera);
         return check;
     }
+
+    static getBrowserName() {
+        const userAgent = navigator.userAgent;
+        const browsers = {
+            Chrome: /chrome/i,
+            Safari: /safari/i,
+            Firefox: /firefox/i,
+            IE: /internet explorer/i,
+            Edge: /edg/i,
+            Opera: /opera|OPR/i,
+            Netscape: /netscape/i,
+            Maxthon: /maxthon/i,
+            SeaMonkey: /seamonkey/i,
+        };
+
+        for (const browser in browsers) {
+            if (browsers[browser].test(userAgent)) {
+                return browser;
+            }
+        }
+
+        return "Unknown";
+    }
+
+    static getScreenResolution() {
+        return `${window.screen.width}x${window.screen.height}`;
+    }
 }
 
 
@@ -253,6 +280,8 @@ class Toast {
     }
 
     render(title, text, opts) {
+        if (this.tatas.length > 0) return;
+
         const id = this.randomId()
         const icon = this.type2Icon(opts.type)
         const position = this.mapPosition(opts.position)

@@ -22,19 +22,19 @@
                     <script type="text/javascript">
                         function makeid()
                         {
-                            var text = "";
-                            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                            let text = "";
+                            let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-                            for( var i=0; i < 5; i++ )
+                            for( let i=0; i < 5; i++ )
                                 text += possible.charAt(Math.floor(Math.random() * possible.length));
 
                             return text;
                         }
 
-                        var assignmentId = "debug" + makeid();
-                        var hitId = "debug" + makeid();
-                        var workerId = "debug" + makeid();
-                        var href = "/ad?assignmentId=" + assignmentId + "&hitId=" + hitId + "&workerId=" + workerId + "&mode=debug"
+                        let assignmentId = "debug" + makeid();
+                        let hitId = "debug" + makeid();
+                        let workerId = "debug" + makeid();
+                        let href = "/ad?assignmentId=" + assignmentId + "&hitId=" + hitId + "&workerId=" + workerId + "&mode=debug"
 
                         $("#ad-href").attr("href", href);
                     </script>

@@ -23,9 +23,13 @@
 		<script src="../static/lib/m-class-list.min.js" type="text/javascript"> </script>
 
 		<script type="text/javascript">
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('assignmentId');
+            const hitId = urlParams.get('hitId');
+            const workerId = urlParams.get('workerId');
+
 			let uniqueId = "{{ uniqueId }}";  // a unique string identifying the worker/task
 			let condition = {{ condition }}; // the condition number
-			let counterbalance = {{ counterbalance }}; // a number indexing counterbalancing conditions
 			let adServerLoc = "{{ adServerLoc }}"; // the location of your ad (so you can send user back at end of experiment)
 			let mode = "{{ mode }}";
 		</script>
