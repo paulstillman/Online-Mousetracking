@@ -50,6 +50,8 @@ __pycache__/
 ######################
 .idea
 
+venv/
+
 psiturk/.psiturk_history
 psiturk/static/images
 psiturk/static/videos
