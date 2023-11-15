@@ -4,6 +4,7 @@ class TrialPage extends Page {
 
     static warning_movement_toast = new Toast();
     static warning_bounds_toast = new Toast();
+    static info_movement_toast = new Toast();
 
     static warning_movement_timeout = null
     static warning_bounds_timeout = null
@@ -38,22 +39,27 @@ class TrialPage extends Page {
         this.mouse_pos_list = [];
 
         this.warning_movement_counter = 0;
-
         this.warning_bounds_counter = 0;
 
+        this.excluded_toasts_list = [];
+
         onmousemove = function(e) {
-            this.clearWarnings();
+            this.clearWarnings(true);
             if (this.getIsMouseRecording()) {
                 clearTimeout(TrialPage.warning_movement_timeout);
                 TrialPage.warning_movement_timeout = setTimeout(function(){
                                                    if (!this.getIsMouseRecording()) return;
                                                    TrialPage.warning_movement_toast.warn('Warning',
-                                                       'Please make a move faster...',
-                                                       {position: "tm", duration: 20000, closeBtn: false});
+                                                       'Please begin (and do not stop) moving your mouse as soon as the image appears...',
+                                                       {position: "tm", duration: 10000, closeBtn: false});
                                                    this.warning_movement_counter = 1;
-                                                   }.bind(this), 2000);
+                                                   if (!this.excluded_toasts_list.includes(TrialPage.warning_movement_toast)) {
+                                                       this.excluded_toasts_list = [];
+                                                       this.excluded_toasts_list.push(TrialPage.warning_movement_toast);
+                                                   }
+                                                   }.bind(this), 750);
 
-                this.mouse_pos_list.push(new MousePosition(e.clientX, e.clientY))
+                this.mouse_pos_list.push(new MousePosition(e.clientX, e.clientY, Date.now()))
             }
         }.bind(this);
 
@@ -65,14 +71,39 @@ class TrialPage extends Page {
                                                  if (!this.getIsMouseRecording()) return;
                                                  TrialPage.warning_bounds_toast.error('Warning',
                                                      'Please keep your cursor within the screen bounds...',
-                                                     {position: "tm", duration: 20000, closeBtn: false});
+                                                     {position: "tm", duration: 10000, closeBtn: false});
                                                  this.warning_bounds_counter = 1;
+                                                 if (!this.excluded_toasts_list.includes(TrialPage.warning_bounds_toast)) {
+                                                     this.excluded_toasts_list = [];
+                                                     this.excluded_toasts_list.push(TrialPage.warning_bounds_toast);
+                                                 }
                                                  }.bind(this), 200);
+            }
+        }.bind(this));
+
+        $(document).mouseenter(function () {
+            if (!this.excluded_toasts_list.includes(TrialPage.warning_bounds_toast)) {
+                 this.excluded_toasts_list = [];
+                 this.clearWarnings();
             }
         }.bind(this));
     }
 
+    showInfoMovementToast() {
+        if (this.getIsMouseRecording()) return;
+        TrialPage.info_movement_toast.info('Warning',
+                                           'Please try to complete your movement sooner...',
+                                           {position: "tm", duration: 10000, closeBtn: false});
+        if (!this.excluded_toasts_list.includes(TrialPage.info_movement_toast)) {
+            this.excluded_toasts_list = [];
+            this.excluded_toasts_list.push(TrialPage.info_movement_toast);
+        }
+    }
+
     bottomClickListener() {
+        this.resetExcludeToastsList();
+        this.clearWarnings();
+
         this.#mainTrialView();
 
         TrialPage.is_mouse_recording = true;
@@ -84,7 +115,6 @@ class TrialPage extends Page {
                                                'Please make a move faster...',
                                                {position: "tm", duration: 20000, closeBtn: false});
                                            this.warning_movement_counter = 1;
-
                                            }.bind(this), 2000);
 
         this.bottom_text_div.removeEventListener('click', this.bottomClickListener.bind(this));
@@ -106,8 +136,6 @@ class TrialPage extends Page {
 
         this.warning_movement_counter = 0;
         this.warning_bounds_counter = 0;
-
-        this.clearWarnings();
     }
 
     setCurrentTrialNum(current_trial_num) {
@@ -159,9 +187,22 @@ class TrialPage extends Page {
         TrialPage.hideElement(this.bottom_text_div);
     }
 
-    clearWarnings() {
+    resetExcludeToastsList() {
         TrialPage.warning_movement_toast.clear();
         TrialPage.warning_bounds_toast.clear();
+        TrialPage.info_movement_toast.clear();
+        this.excluded_toasts_list = [];
+    }
+
+    clearWarnings(do_exclude_toasts=false) {
+        if (!(do_exclude_toasts && this.excluded_toasts_list.includes(TrialPage.warning_movement_toast)))
+            TrialPage.warning_movement_toast.clear();
+
+        if (!(do_exclude_toasts && this.excluded_toasts_list.includes(TrialPage.warning_bounds_toast)))
+            TrialPage.warning_bounds_toast.clear();
+
+        if (!(do_exclude_toasts && this.excluded_toasts_list.includes(TrialPage.info_movement_toast)))
+            TrialPage.info_movement_toast.clear();
 
         clearTimeout(TrialPage.warning_movement_timeout);
         clearTimeout(TrialPage.warning_bounds_timeout);
@@ -200,6 +241,12 @@ class TrialPage extends Page {
     getMouseYPosList() {
         let return_list = [];
         this.mouse_pos_list.forEach(mouse_pos => return_list.push(mouse_pos.getYPos()));
+        return return_list.map(String);
+    }
+
+    getMouseTimestampList() {
+        let return_list = [];
+        this.mouse_pos_list.forEach(mouse_pos => return_list.push(mouse_pos.getTime()));
         return return_list.map(String);
     }
 
